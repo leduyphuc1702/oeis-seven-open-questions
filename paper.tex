@@ -1,0 +1,216 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{hyperref}
+\emergencystretch=3em
+
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\oeis}[1]{\href{https://oeis.org/#1}{\texttt{#1}}}
+
+\title{Answers to Seven Open Questions in the OEIS:\\
+Last Terms of Four Greedy Digit Sequences,\\
+Completeness of A134320, and Two Smaller Questions}
+
+\author{Le Duy Phuc\thanks{Email: \href{mailto:leduyphuc1702@gmail.com}{\texttt{leduyphuc1702@gmail.com}}}}
+\date{November 25, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We settle questions recorded in seven entries of the OEIS. (1) Four ``lexicographically earliest'' sequences built from numbers with distinct decimal digits are known to be finite, but their lengths were unknown. We prove that \oeis{A364274} has exactly $59388$ terms, ending with $a(59388)=250983$; \oeis{A365197} has exactly $75$ terms, ending with $a(75)=1023465$; \oeis{A342383} ends with $a(4157155)=896075231$; and \oeis{A336285} ends with $a(1481482307)=4938274219$. Each proof is an exhaustive greedy computation over the $8877690$ positive integers with distinct digits, carried out by two independent programs, together with an explicit termination certificate. For \oeis{A336285} we also explain the shape of the run: once the least unused number exceeds $987654321/2$, every sum of consecutive terms uses all ten digits, so the terms alternate between two residue classes modulo $9$. (2) We prove that the eight known terms of \oeis{A134320} (numbers with more non-isolated than isolated divisors) are all of them, completing a 2007 partial proof. (3) We show that the block conjecture in \oeis{A110194} is false and describe the tail exactly, and (4) we determine the least sum of two primes that together use all ten digits (\oeis{A103850}): it is $34146$, attained by exactly three pairs. For (3) and (4) the numerical facts were already implicit in published data; we supply short proofs.
+\end{abstract}
+
+\noindent\textbf{MSC 2020:} 11A63, 11B83, 11A25, 68R05.\\
+\textbf{Keywords:} OEIS, greedy sequences, distinct digits, termination certificate, isolated divisors.
+
+\section{Introduction}
+
+Table~\ref{tab:summary} lists the results. Sections~\ref{sec:frame}--\ref{sec:336285} treat the four greedy sequences, Section~\ref{sec:134320} the divisor problem, and Section~\ref{sec:small} the two smaller questions. The questions are due to Eric Angelini (A364274, A365197), R\'emy Sigrist (A336285), Scott R. Shannon (A342383), Leroy Quet and Hugo van der Sanden (A134320), Alexandre Wajnberg and Eric Angelini (A110194) and Zak Seidov (A103850); see the OEIS entries for exact attributions.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Entry & Question in the entry & Answer \\
+\midrule
+A364274 & last term? & $59388$ terms, $a(59388)=250983$ \\
+A365197 & last term? & $75$ terms, $a(75)=1023465$ \\
+A342383 & number of terms? & $a(0..4157155)$, last term $896075231$ \\
+A336285 & number of terms? & $a(0..1481482307)$, last term $4938274219$ \\
+A134320 & is the sequence finite (complete)? & yes, exactly the 8 listed terms \\
+A110194 & only blocks $114$ and $111144$? & no; tail described exactly \\
+A103850 & least $p+q$ using all ten digits? & $34146$, three pairs \\
+\bottomrule
+\end{tabular}
+\caption{Summary.}\label{tab:summary}
+\end{table}
+
+\section{Framework for the greedy sequences}\label{sec:frame}
+
+Let $\mathcal V$ be the set of positive integers whose decimal digits are pairwise distinct. A member of $\mathcal V$ has at most ten digits, so $\max\mathcal V=9876543210$ and
+\[
+ |\mathcal V|=\sum_{r=1}^{10}9\cdot\frac{9!}{(10-r)!}=8877690 .
+\]
+All four sequences are greedy: each term is the least positive integer satisfying conditions that depend on the earlier terms. In every case the conditions force either the term itself or a sum involving it to lie in $\mathcal V$, so only finitely many candidates exist at each step and a search over them is exhaustive. When the search finds no candidate, the sequence ends. All computations use exact 64-bit integer arithmetic. The programs are listed in Section~\ref{sec:repro}; for each sequence two programs with different search loops and data structures produce identical output.
+
+\section{A364274}\label{sec:364274}
+
+\oeis{A364274} is the lexicographically earliest sequence of distinct positive integers whose partial sums $Q(n)=a(1)+\dots+a(n)$ all have distinct digits.
+
+\begin{lemma}
+Given $Q=Q(n-1)$ and the set $U$ of earlier terms, $a(n)=T-Q$, where $T$ is the least element of $\mathcal V$ with $T>Q$ and $T-Q\notin U$.
+\end{lemma}
+
+\begin{proof}
+$a\mapsto Q+a$ is an order-preserving bijection from the positive integers onto the integers greater than $Q$, and it maps the admissible $a$ onto the stated set of $T$.
+\end{proof}
+
+Since $Q$ increases, each element of $\mathcal V$ needs to be examined at most once: scanning $\mathcal V$ in increasing order and accepting $T$ whenever $T-Q$ is unused reproduces the sequence. The scan accepts $59388$ elements and rejects the other $8818302$.
+
+\begin{theorem}
+\oeis{A364274} has exactly $59388$ terms. The last term is $a(59388)=250983$, and $Q(59388)=9876501324$.
+\end{theorem}
+
+\begin{proof}
+The scan above is exhaustive. As an independent certificate for the last step: every element of $\mathcal V$ larger than $Q^*=9876501324$ has ten digits, so it is a permutation of $0,\dots,9$ beginning with $98765$, followed by a permutation of $0,1,2,3,4$ greater than $01324$. There are $5!-3=117$ of them, and for each such $T$ the difference $T-Q^*$ is an earlier term; the first differences are $18=a(19)$, $99=a(111)$, $108=a(114)$, $810=a(903)$. The full list of $117$ differences with their indices is in \texttt{A364274\_terminal.tsv}.
+\end{proof}
+
+\section{A365197}\label{sec:365197}
+
+In \oeis{A365197}, $a(n)$ and $a(n+1)$ share exactly $d_n$ distinct digits, where $d_1d_2d_3\dots$ is the concatenation of the decimal expansions of the terms. All terms are distinct and have distinct digits, and, by the extra rule of Giorgos Kalogeropoulos, $a(n)$ has at least $d_n$ digits. We follow the Mathematica program of the entry: $a(1)=1$, and $a(n)$ is the least unused $x\in\mathcal V$ sharing exactly $d_{n-1}$ digits with $a(n-1)$ and having at least $d_n$ digits. (At $n=2$ the digit $d_2$ is not yet defined and the program imposes no length condition; from $n=3$ on, the concatenation of the earlier terms always has at least $n$ digits.)
+
+\begin{theorem}
+\oeis{A365197} has exactly $75$ terms. The terms after the $52$ shown in the entry are
+\[
+\begin{aligned}
+&10236, 14578, 14587, 14758, 10239, 10293, 9, 21, 120, 201, 19, 203,\\
+&230, 30, 1027, 10237, 102347, 102374, 1568, 102568, 102586, 1023456, 1023465.
+\end{aligned}
+\]
+\end{theorem}
+
+\begin{proof}
+The terms follow from the exhaustive search. For termination, the concatenation of the $75$ terms gives $d_{75}=1$ and $d_{76}=7$. A term $a(76)$ would have to share exactly one digit with $1023465$, whose digit set is $\{0,\dots,6\}$, and have at least seven distinct digits. It can contain at most one digit of $\{0,\dots,6\}$ and the three digits $7,8,9$, so it has at most four digits, a contradiction.
+\end{proof}
+
+\section{A342383}\label{sec:342383}
+
+In \oeis{A342383}, $a(0)=0$ and, for $n\ge1$, $a(n)$ is the least unused positive integer such that $a(n)$ and $a(n-1)+a(n)$ both have distinct digits. With $p=a(n-1)$, the term $a(n)$ is the least unused $x\in\mathcal V$ with $p+x\in\mathcal V$. Both programs find it by alternating between the two conditions: take the least unused $x\in\mathcal V$ not below a lower bound $\ell$; if $p+x\in\mathcal V$, stop; otherwise raise $\ell$ to $T-p$, where $T$ is the least element of $\mathcal V$ with $T\ge p+x$. Each skipped value fails one of the two conditions, so the first value found is $a(n)$, and if $\ell$ runs past the end of $\mathcal V$ no term exists.
+
+\begin{theorem}
+\oeis{A342383} has the $4157156$ terms $a(0),\dots,a(4157155)$. The last term is $a(4157155)=896075231$.
+\end{theorem}
+
+\begin{proof}
+The search is exhaustive. As a certificate for the last step: there are exactly $8764$ numbers $x\in\mathcal V$ with $896075231+x\in\mathcal V$, and every one of them is an earlier term (the smallest are $3=a(3)$, $10=a(10)$, $12=a(12)$, $81=a(74)$). The script \texttt{a342383\_certificate.py} lists them from the b-file and also rechecks the defining conditions of every term.
+\end{proof}
+
+The full list has SHA-256 \texttt{491a1f73\ldots fdc8} (file \texttt{b342383\_full.txt}, lines ``$n$ $a(n)$'').
+
+\section{A336285}\label{sec:336285}
+
+In \oeis{A336285}, $a(0)=0$ and $a(n)$ is the least unused positive integer such that $a(n-1)+a(n)$ has distinct digits; the term itself need not have distinct digits. Every term is less than $9876543210$, so the set of used values fits in a bitset of about $1.2$ GB.
+
+Let $\mu$ be the least positive integer not yet used. It never decreases, and every later term is at least $\mu$.
+
+\begin{lemma}\label{lem:mod9}
+Suppose that at some step $a(n-1)+\mu>987654321$. Then every admissible sum $a(n-1)+x$ ($x\ge\mu$) has ten distinct digits and is divisible by $9$, so $x\equiv-a(n-1)\pmod 9$. Consequently, once $2\mu>987654321$, the terms alternate between the residue classes $r$ and $-r$ modulo $9$ for a fixed $r$.
+\end{lemma}
+
+\begin{proof}
+No element of $\mathcal V$ lies strictly between $987654321$ and $1023456789$; a ten-digit element of $\mathcal V$ uses every digit once, so its digit sum is $45$. If $2\mu>987654321$, all later terms are at least $\mu$, so all later consecutive sums exceed $987654321$.
+\end{proof}
+
+Lemma~\ref{lem:mod9} is used only to start the search for $a(n)$ at the least unused number in the class $-a(n-1)\bmod 9$ rather than at $\mu$; without it, the search would repeatedly pass over the numbers in the other seven classes, which can never be used again. One program alternates between the unused set and $\mathcal V-p$ as in Section~\ref{sec:342383}; the other scans the sorted list of $\mathcal V$ upward from $p$ plus the start value and takes the first $T$ with $T-p$ unused. Both stop when no candidate is left.
+
+\begin{theorem}
+\oeis{A336285} has the $1481482308$ terms $a(0),\dots,a(1481482307)$. The last term is $a(1481482307)=4938274219$. The largest term is $4938274688$, and the least positive integer that never occurs is $493822662$.
+\end{theorem}
+
+The two programs agree on the length, the last term and a checksum of the whole sequence (the 64-bit FNV-1a recurrence $h\leftarrow(h\oplus a(n))\cdot1099511628211$ over $n\ge1$, starting from $h=14695981039346656037$): \texttt{2be9fa44ae3f7d9d}. The full sequence is not stored; it is regenerated in a few minutes.
+
+\begin{remark}
+The values explain themselves: the least unused number stalls just below $987654321/2\approx4.94\cdot10^8$, when Lemma~\ref{lem:mod9} starts to apply, and the last terms cluster around $9876543210/2\approx4.94\cdot10^9$: they alternate between values near $4938227000$ and $4938274000$, whose sums $9876501\ldots$ are among the largest elements of $\mathcal V$. The last term $4938274219$ is $\equiv4\pmod9$.
+\end{remark}
+
+\section{A134320}\label{sec:134320}
+
+A divisor $d$ of $N$ is \emph{non-isolated} if $d-1$ or $d+1$ also divides $N$. \oeis{A134320} lists the $N$ with more non-isolated than isolated divisors: $2,4,6,12,20,30,42,90$. The entry contains a reduction due to Hugo van der Sanden (2007) and asks whether the list is complete. Let $\tau(N)$ be the number of divisors and $C(N)$ the number of non-isolated divisors.
+
+\begin{theorem}
+$2C(N)>\tau(N)$ if and only if $N\in\{2,4,6,12,20,30,42,90\}$.
+\end{theorem}
+
+\begin{proof}
+\emph{Step 1.} If $d>\sqrt N$ is non-isolated, then $d+1\nmid N$, since otherwise $d(d+1)\mid N$ by coprimality and $d(d+1)>N$. Hence $d-1\mid N$ and $d(d-1)\mid N$; as $N<d^2\le2d(d-1)$, we get $N=d(d-1)$. In particular at most one divisor above $\sqrt N$ is non-isolated.
+
+\emph{Step 2.} If $N$ is not a square, half of its divisors lie above $\sqrt N$, so $2C(N)>\tau(N)$ forces a non-isolated divisor above $\sqrt N$. By Step 1, $N=m(m+1)$, the only such divisor is $m+1$, and every divisor below $\sqrt N$ must be non-isolated. If $N=t^2$, no divisor above $t$ is non-isolated (a product of two consecutive integers greater than $1$ is not a square), so $t$ and all smaller divisors must be non-isolated; $t+1\nmid t^2$, and $t-1\mid t^2$ forces $t-1\mid1$, so $t=2$ and $N=4$, which qualifies.
+
+\emph{Step 3.} Let $N=m(m+1)$ qualify, $m\ge2$, and let $2u$ be the even one of $m,m+1$. Then $u\mid N$ and $u<\sqrt N$, so for $u\ge2$ one of $u\pm1$ divides $N$, and, being coprime to $u$, it divides $N/u$. If $m=2u$, then $N/u=4u+2\equiv-2\pmod{u+1}$ and $\equiv6\pmod{u-1}$, so $u+1\mid2$ or $u-1\mid6$; hence $u\le7$ and $m\le14$. If $m+1=2u$, then $N/u=4u-2\equiv-6\pmod{u+1}$ and $\equiv2\pmod{u-1}$, so $u\le5$ and $m\le9$. Thus $m\le14$.
+
+\emph{Step 4.} Checking $m=1,\dots,14$ directly gives exactly $N=2,6,12,20,30,42,90$; for example $56=7\cdot8$ fails because $4$ is isolated, and $210=14\cdot15$ fails because $10$ is isolated.
+\end{proof}
+
+\section{Two smaller questions}\label{sec:small}
+
+\subsection{A110194}
+
+\oeis{A110194} lists the first differences of \oeis{A110095}, the least sequence of nonprimes (starting at $1$) whose differences are nonprime. The entry asks whether from $a(5)$ on only the blocks $114$ and $111144$ occur.
+
+\begin{proposition}
+Let $x\ge9$ be a term of A110095. The next difference is $4$ if $x+1$ is prime and $1$ otherwise. Runs of $4$ have length at most $2$, runs of $1$ are unbounded, and $a(56),\dots,a(65)$ are ten consecutive $1$'s. In particular the block conjecture is false.
+\end{proposition}
+
+\begin{proof}
+If $x+1$ is not prime, the difference $1$ is admissible. If $x+1$ is prime, it is odd, so $x$ is even; the differences $2,3$ are prime, and $x+4$ is even and composite. Three consecutive $4$'s would need $x+1,x+5,x+9$ all prime, but one of them is divisible by $3$. For runs of $1$: all differences after the second are at most $4$, so the sequence enters every block of at least four consecutive composites, such as $K!+2,\dots,K!+K$, within its first four elements and then moves through it in unit steps. The ten $1$'s are a direct computation; neither block contains five consecutive $1$'s.
+\end{proof}
+
+The counterexample is visible in the terms already shown in the entry; we only add the description.
+
+\subsection{A103850}
+
+The comment in \oeis{A103850} asks for two primes that together contain all ten digits and have the least sum, and suggests $23567+18049=41616$.
+
+\begin{proposition}
+The least sum is $34146$, attained exactly by $10457+23689$, $10459+23687$ and $10687+23459$.
+\end{proposition}
+
+\begin{proof}
+$10457$ and $23689$ are prime, so the minimum is at most $34146$. Then both primes are below $34146$, have at most five digits, and together have at least ten; so both have exactly five digits and the ten digits are all different. With $p<q$ the leading digits are $1,2$. The thousands digits sum to at least $3$; a sum of $5$ or more gives at least $35000$, and a sum of $4$ means digits $0,4$ and hundreds digits summing to at least $8$, giving at least $34800$. So the thousands digits are $0,3$. The units digits must be $7,9$ (both primes exceed $5$, and $1,3$ are used). The remaining digits $4,5,6,8$ fill the hundreds and tens places; with hundreds sum $H$ the total is $33246+90H$, so $H\le10$, i.e.\ the hundreds digits are $\{4,5\}$ or $\{4,6\}$. Testing the $32$ resulting pairs gives no prime pair with sum $34056$ and exactly the three pairs above with sum $34146$.
+\end{proof}
+
+The pair $10457,23689$ already appears in a 2022 online article (S.~Kurland, ``Primel thoughts''), and exhaustive lists of pandigital prime pairs were posted on primepuzzles.net in 2024; we claim only the short proof.
+
+\section{Reproducibility}\label{sec:repro}
+
+All programs use only the C++17 standard library or the Python 3 standard library.
+\begin{itemize}\raggedright
+\item \texttt{a364274.py}: scan of $\mathcal V$ (2 s); an earlier independent C++ implementation gives byte-identical output.
+\item \texttt{a365197.py}: direct greedy search by length (5 s).
+\item \texttt{a342383.cpp} (sorted array, path-compressed successor structure) and \texttt{a342383\_bits.cpp} (bitsets with a summary level): identical output, about 5--8 minutes each; \texttt{a342383\_certificate.py}.
+\item \texttt{a336285.cpp} (bitset with summary level, alternating search) and \texttt{a336285\_scan.cpp} (sorted array scan): identical length, last term, largest term and checksum; about 9 and 2 minutes.
+\item \texttt{verify\_small.py}: A134320 by brute force up to $10^6$ and the bound of Step 3 up to $m<5000$; A110194 against its definition and the entry; A103850 by a sieve over all five-digit primes.
+\end{itemize}
+The first $77$ terms of A342383 and A336285 and the first $70$ of A364274 and $52$ of A365197 agree with the OEIS data, and the first $3000$ (A364274) or $10000$ (A342383, A336285; \texttt{literal\_check.py}) terms agree with a literal implementation of the definition.
+
+\section*{Acknowledgements}
+The questions are due to the authors of the OEIS entries named above. An earlier draft of the results for A134320, A110194, A103850, A364274 and A365197 was prepared with the help of AI tools; all statements were re-derived, all computations were redone with independently written programs, and the results for A342383 and A336285 were obtained here. AI assistance was also used for writing code and text; the author checked everything.
+
+\begin{thebibliography}{9}
+\bibitem{OEIS} OEIS Foundation Inc., \emph{The On-Line Encyclopedia of Integer Sequences}, \url{https://oeis.org}; entries A103850, A110095, A110194, A134320, A336285, A342383, A364274, A365197.
+\bibitem{Ang} E. Angelini, \emph{Shared digits}, blog post, August 25, 2023, \url{https://cinquantesignes.blogspot.com/2023/08/shared-digits.html}.
+\bibitem{Kur} S. Kurland, \emph{Primel thoughts}, February 12, 2022, \url{https://medium.com/@scottkurland/primel-thoughts-b74d18b3476e}.
+\end{thebibliography}
+
+\end{document}
