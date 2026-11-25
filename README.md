@@ -1,6 +1,6 @@
 # Answers to seven open questions in the OEIS
 
-Le Duy Phuc, 2026-11-25. Paper: `paper.pdf` (source `paper.tex`).
+Le Duy Phuc, 2026-11-25. Paper: `paper.pdf` (source `paper.tex`). Zenodo: https://doi.org/10.5281/zenodo.24529605 · Code: https://github.com/leduyphuc1702/oeis-seven-open-questions
 
 | Entry | Question in the entry | Answer |
 |---|---|---|
